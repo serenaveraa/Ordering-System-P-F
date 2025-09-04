@@ -2,6 +2,7 @@ import { Order } from '../types/models';
 import { FilterResult, OrderFilter, OrderPipeline, PipelineConfig, PipelineResult, ProcessingContext } from '../types/pipeline';
 import { DataIntegrityFilter, CustomerValidationFilter, ProductValidationFilter } from '../filters/validation';
 import { MembershipDiscountFilter, PriceCalculationFilter, TaxCalculationFilter, VolumeDiscountFilter } from '../filters/pricing';
+import { PaymentProcessingFilter, ShippingCostFilter } from '../filters/shipping_payment';
 import { InMemoryStore } from '../store/memory';
 
 export function buildMasterPipeline(store: InMemoryStore): OrderPipeline {
@@ -12,6 +13,8 @@ export function buildMasterPipeline(store: InMemoryStore): OrderPipeline {
     PriceCalculationFilter,
     MembershipDiscountFilter,
     VolumeDiscountFilter,
+    ShippingCostFilter,
+    PaymentProcessingFilter,
     TaxCalculationFilter,
   ];
 

@@ -16,6 +16,8 @@ describe('Master Pipeline Integration', () => {
     const config = {
       enabledFilters: {},
       tax: { defaultRate: 0.21, categoryRates: { food: 0.1 } },
+      shipping: { flatRate: 10, freeThreshold: 300 },
+      payment: { simulate: 'success' },
       discounts: {
         membership: { bronze: 0.05, silver: 0.1, gold: 0.15, platinum: 0.2 },
         volume: {
@@ -34,11 +36,20 @@ describe('Master Pipeline Integration', () => {
   test('Fails when customer invalid', async () => {
     const pipeline = buildMasterPipeline(store);
     const order: any = { id: 'o11', customerId: 'unknown', items: [{ productId: 'p1', quantity: 1 }], status: 'pending', createdAt: new Date() };
-    const config: any = { enabledFilters: {} };
+    const config: any = { enabledFilters: {}, payment: { simulate: 'success' } };
     const result = await pipeline.process(order, config);
     expect(result.success).toBe(false);
     expect(result.finalOrder.status).toBe('rejected');
     expect(result.failedAt).toBeDefined();
+  });
+
+  test('Fails on payment timeout', async () => {
+    const pipeline = buildMasterPipeline(store);
+    const order: any = { id: 'o12', customerId: 'c1', items: [{ productId: 'p1', quantity: 1 }], status: 'pending', createdAt: new Date() };
+    const config: any = { enabledFilters: {}, payment: { simulate: 'timeout', timeoutMs: 10 } };
+    const result = await pipeline.process(order, config);
+    expect(result.success).toBe(false);
+    expect(result.failedAt).toBe('PaymentProcessingFilter');
   });
 });
 

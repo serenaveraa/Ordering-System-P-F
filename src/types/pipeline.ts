@@ -38,6 +38,15 @@ export interface PipelineConfig {
     membership: Record<'bronze' | 'silver' | 'gold' | 'platinum', number>;
     volume: { items: { threshold: number; rate: number }[]; amount: { threshold: number; rate: number }[] };
   };
+  shipping?: {
+    flatRate?: number;
+    freeThreshold?: number;
+    tiered?: { threshold: number; amount: number }[];
+  };
+  payment?: {
+    simulate?: 'success' | 'fail' | 'timeout';
+    timeoutMs?: number;
+  };
 }
 
 export interface PipelineResult {
