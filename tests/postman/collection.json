@@ -1,0 +1,121 @@
+{
+  "info": {
+    "name": "PipesAndFilters API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Pipeline Config",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/pipeline/config", "host": ["{{baseUrl}}"], "path": ["pipeline", "config"] }
+      },
+      "response": [],
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('status 200', function () { pm.response.to.have.status(200); });",
+            "pm.test('has enabledFilters', function () { var json = pm.response.json(); pm.expect(json).to.have.property('enabledFilters'); });"
+          ],
+          "type": "text/javascript"
+        }
+      }]
+    },
+    {
+      "name": "Set Pipeline Config",
+      "request": {
+        "method": "PUT",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"enabledFilters\": {},\n  \"tax\": { \"defaultRate\": 0.21, \"categoryRates\": { \"food\": 0.1 } },\n  \"discounts\": {\n    \"membership\": { \"bronze\": 0.05, \"silver\": 0.1, \"gold\": 0.15, \"platinum\": 0.2 },\n    \"volume\": {\n      \"items\": [{ \"threshold\": 10, \"rate\": 0.05 }, { \"threshold\": 50, \"rate\": 0.1 }],\n      \"amount\": [{ \"threshold\": 1000, \"rate\": 0.05 }, { \"threshold\": 5000, \"rate\": 0.1 }]\n    }\n  }\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/pipeline/config", "host": ["{{baseUrl}}"], "path": ["pipeline", "config"] }
+      },
+      "response": [],
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('status 200', function () { pm.response.to.have.status(200); });",
+            "pm.test('echoed config', function () { var json = pm.response.json(); pm.expect(json.discounts.membership.gold).to.eql(0.15); });"
+          ],
+          "type": "text/javascript"
+        }
+      }]
+    },
+    {
+      "name": "Process Order - Success",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerId\": \"c1\",\n  \"items\": [ { \"productId\": \"p1\", \"quantity\": 12 }, { \"productId\": \"p2\", \"quantity\": 1 } ]\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/orders/process", "host": ["{{baseUrl}}"], "path": ["orders","process"] }
+      },
+      "response": [],
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('status 200', function () { pm.response.to.have.status(200); });",
+            "var json = pm.response.json();",
+            "pm.environment.set('lastOrderId', json.finalOrder.id);",
+            "pm.test('success true', function () { pm.expect(json.success).to.be.true; });"
+          ],
+          "type": "text/javascript"
+        }
+      }]
+    },
+    {
+      "name": "Order Status",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/orders/{{lastOrderId}}/status", "host": ["{{baseUrl}}"], "path": ["orders", "{{lastOrderId}}", "status"] }
+      },
+      "response": [],
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('status 200', function () { pm.response.to.have.status(200); });",
+            "pm.test('has success', function () { var json = pm.response.json(); pm.expect(json.success).to.be.true; });"
+          ],
+          "type": "text/javascript"
+        }
+      }]
+    },
+    {
+      "name": "Process Order - Invalid Customer",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerId\": \"unknown\",\n  \"items\": [ { \"productId\": \"p1\", \"quantity\": 1 } ]\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/orders/process", "host": ["{{baseUrl}}"], "path": ["orders","process"] }
+      },
+      "response": [],
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('status 400', function () { pm.response.to.have.status(400); });",
+            "var json = pm.response.json();",
+            "pm.test('success false', function () { pm.expect(json.success).to.be.false; });",
+            "pm.test('failedAt exists', function () { pm.expect(json.failedAt).to.be.a('string'); });"
+          ],
+          "type": "text/javascript"
+        }
+      }]
+    }
+  ],
+  "event": []
+}
+
